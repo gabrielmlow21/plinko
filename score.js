@@ -1,21 +1,22 @@
 const outputs = [];
-const k = 3;
 
 const onScoreUpdate = (dropPosition, bounciness, size, bucketLabel) => 
   outputs.push([dropPosition, bounciness, size, bucketLabel])
 
 const runAnalysis = () => {
-  const testSetSize = 10;
+  const testSetSize = 50;
   const [testSet, trainingSet] = splitDataset(outputs, testSetSize);
-  const accuracy = _.chain(testSet)
-    .filter(testPoint => knn(trainingSet, testPoint[0]) === testPoint[3])
-    .size()
-    .divide(testSetSize)
-    .value();
-  console.log(accuracy);
+  _.range(1, 15).forEach(k => {
+    const accuracy = _.chain(testSet)
+      .filter(testPoint => knn(trainingSet, testPoint[0], k) === testPoint[3])
+      .size()
+      .divide(testSetSize)
+      .value();
+    console.log('For k of', k, 'accuracy is', accuracy);
+  });
 }
 
-const knn = (data, point) => 
+const knn = (data, point, k) => 
   _.chain(data)
     .map(row => [distance(row[0], point), row[3]])  // [distance of dropPosition from predictionPoint, bucket]
     .sortBy(row => row[0])  // sort based on distance of dropPosition from predictionPoint
@@ -34,7 +35,7 @@ const distance = (pointA, pointB) => Math.abs(pointA - pointB);
 // splits the dataset into a dataset for testing and for training
 const splitDataset = (data, testCount) => {
   const shuffled = _.shuffle(data);
-  const testSet = _.slice(shuffled, 0, testCount);
-  const trainingSet = _.slice(shuffled, testCount);
+  const testSet = _.slice(shuffled, 0, testCount);  // the first until the testCount'th data will be used as test sets
+  const trainingSet = _.slice(shuffled, testCount);  // the rest are training sets
   return [testSet, trainingSet];
 }
