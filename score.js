@@ -1,13 +1,23 @@
 const outputs = [];
-const predictionPoint = 300;
 const k = 3;
 
 const onScoreUpdate = (dropPosition, bounciness, size, bucketLabel) => 
   outputs.push([dropPosition, bounciness, size, bucketLabel])
 
 const runAnalysis = () => {
-  const bucket = _.chain(outputs)
-    .map(row => [distance(row[0]), row[3]])  // [distance of dropPosition from predictionPoint, bucket]
+  const testSetSize = 10;
+  const [testSet, trainingSet] = splitDataset(outputs, testSetSize);
+  let totalCorrect = 0;
+  for (let i = 0; i < testSet.length; i++) {
+    const bucket = knn(trainingSet, testSet[i][0]);
+    if (bucket === testSet[i][3]) totalCorrect++;  // bucket = predicted value; testSet[i][3] = true value
+  }
+  console.log('Accuracy: ', totalCorrect/testSetSize)
+}
+
+const knn = (data, point) => 
+  _.chain(data)
+    .map(row => [distance(row[0], point), row[3]])  // [distance of dropPosition from predictionPoint, bucket]
     .sortBy(row => row[0])  // sort based on distance of dropPosition from predictionPoint
     .slice(0, k)  // take first k elements
     .countBy(row => row[1])  // count the occurrence of each bucket and returns object of objects, i.e. {bucket: occurrence}
@@ -17,12 +27,9 @@ const runAnalysis = () => {
     .first()  // get first element of the array (the bucket number)
     .parseInt()  // convert to int
     .value();  // stop chain operation
-  
-    console.log('Your point will probably fall into ' + bucket);
-}
 
-// calculate distance of a point from the predictionPoint
-const distance = point => Math.abs(point - predictionPoint);
+// calculate distance of 2 points
+const distance = (pointA, pointB) => Math.abs(pointA - pointB);
 
 // splits the dataset into a dataset for testing and for training
 const splitDataset = (data, testCount) => {
