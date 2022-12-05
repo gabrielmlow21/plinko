@@ -30,7 +30,13 @@ const knn = (data, point, k) =>
     .value();  // stop chain operation
 
 // calculate distance of 2 points
-const distance = (pointA, pointB) => Math.abs(pointA - pointB);
+const distance = (pointA, pointB) => 
+  // applying phytogram theorem
+  _.chain(pointA)
+    .zip(pointB)  // e.g. a = [x1, y1]; b = [x2, y2]; a.zip(b) = [[x1, x2], [y1, y2]]
+    .map(([a, b]) => (a - b) ** 2)  // destructure -> subtract -> power it
+    .sum()  // sum the elements in the array
+    .value() ** 0.5;  // square root
 
 // splits the dataset into a dataset for testing and for training
 const splitDataset = (data, testCount) => {
